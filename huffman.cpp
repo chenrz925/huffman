@@ -260,7 +260,7 @@ static int flush_cache(buf_cache* pc)
 	if(pc->cache_cur > 0)
 	{
 		unsigned int newlen = pc->cache_cur + *pc->pbufoutlen;
-		unsigned char* tmp = realloc(*pc->pbufout, newlen);
+		unsigned char* tmp = (unsigned char *) realloc(*pc->pbufout, newlen);
 		if(!tmp)
 			return 1;
 
@@ -291,7 +291,7 @@ static int write_cache(buf_cache* pc,
 		unsigned int newlen;
 		flush_cache(pc);
 		newlen = *pc->pbufoutlen + to_write_len;
-		tmp = realloc(*pc->pbufout, newlen);
+		tmp = (unsigned char *) realloc(*pc->pbufout, newlen);
 		if(!tmp)
 			return 1;
 		memcpy(tmp + *pc->pbufoutlen, to_write, to_write_len);
@@ -381,18 +381,22 @@ SFComp(const void *p1, const void *p2)
 	return 0;
 }
 
-#if 0
+#if 1
 static void
 print_freqs(SymbolFrequencies * pSF)
 {
+	FILE *fp = fopen("freqstat.csv", "wb");
 	size_t i;
 	for(i = 0; i < MAX_SYMBOLS; ++i)
 	{
-		if((*pSF)[i])
+		if((*pSF)[i]) {
 			printf("%d, %ld\n", (*pSF)[i]->symbol, (*pSF)[i]->count);
+			fprintf(fp, "%d,%ld\n", (*pSF)[i]->symbol, (*pSF)[i]->count);
+		}
 		else
 			printf("NULL\n");
 	}
+	fclose(fp);
 }
 #endif
 
@@ -430,7 +434,7 @@ calculate_huffman_codes(SymbolFrequencies * pSF)
 	huffman_node *m1 = NULL, *m2 = NULL;
 	SymbolEncoder *pSE = NULL;
 	
-#if 0
+#if 1
 	printf("BEFORE SORT\n");
 	print_freqs(pSF);
 #endif
@@ -438,7 +442,7 @@ calculate_huffman_codes(SymbolFrequencies * pSF)
 	/* Sort the symbol frequency array by ascending frequency. */
 	qsort((*pSF), MAX_SYMBOLS, sizeof((*pSF)[0]), SFComp);
 
-#if 0	
+#if 0
 	printf("AFTER SORT\n");
 	print_freqs(pSF);
 #endif
@@ -858,13 +862,13 @@ do_memory_encode(buf_cache *pc,
 	unsigned char curbyte = 0;
 	unsigned char curbit = 0;
 	unsigned int i;
-	
+
 	for(i = 0; i < bufinlen; ++i)
 	{
 		unsigned char uc = bufin[i];
 		huffman_code *code = (*se)[uc];
 		unsigned long i;
-		
+
 		for(i = 0; i < code->numbits; ++i)
 		{
 			/* Add the current bit to curbyte. */
@@ -914,6 +918,13 @@ huffman_encode_file(FILE *in, FILE *out)
 	   previously built, encode it into the output file. */
 	rewind(in);
 	rc = write_code_table(out, se, symbol_count);
+#if 1
+    FILE *fp = fopen("codelen.csv", "w");
+    for (int i = 0; i < MAX_SYMBOLS; ++i) {
+		fprintf(fp, "%d,%ld\n", i, (*se)[i]->numbits);
+	}
+	fclose(fp);
+#endif
 	if(rc == 0)
 		rc = do_file_encode(in, out, se);
 
