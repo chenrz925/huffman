@@ -37,7 +37,8 @@ int main(const int argc, const char **argv) {
                     help_info();
                     break;
                 case 'a':
-                    analysis(fnm, true);
+                    if (argc == 3)
+                        analysis(fnm, true);
                     break;
                 case 'c':
                     if (argc == 4)
