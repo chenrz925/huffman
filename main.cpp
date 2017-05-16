@@ -18,7 +18,7 @@ void help_info();
 char_count *analysis(std::string filename, bool show);
 
 int compare_char_count(const void *count_a, const void *count_b) {
-    return (int) (((char_count *)(count_a))->n - ((char_count *)(count_b))->n);
+    return (int) (((char_count *) (count_a))->n - ((char_count *) (count_b))->n);
 }
 
 int main(const int argc, const char **argv) {
@@ -41,15 +41,43 @@ int main(const int argc, const char **argv) {
                         analysis(fnm, true);
                     break;
                 case 'c':
-                    if (argc == 4)
-                        huffman_encode_file(fopen(argv[2], "rb"), fopen(argv[3], "wb"));
+                    if (argc == 4) {
+                        FILE *fin = fopen(argv[2], "rb");
+                        FILE *fout = fopen(argv[3], "wb");
+                        if (fin && fout)
+                            huffman_encode_file(fin, fout);
+                        else {
+                            fin = fopen(argv[2], "r");
+                            fout = fopen(argv[3], "w");
+                            if (fin && fout)
+                                huffman_encode_file(fin, fout);
+                            else {
+                                if (!fin) fprintf(stderr, "ERR: BAD input filename.\n");
+                                else fprintf(stderr, "ERR: BAD output filename.\n");
+                            }
+                        }
+                    }
                     break;
                 case 'x':
                     if (argc == 4)
                         huffman_decode_file(fopen(argv[2], "rb"), fopen(argv[3], "wb"));
                     break;
-                case 'l':
-
+                case 'b': {
+                    FILE *bfp = fopen("best.bin", "wb");
+                    for (int i = 1 << 14; i > 0; --i)
+                        putc(255, bfp);
+                    putc(0, bfp);
+                    fclose(bfp);
+                    break;
+                }
+                case 'w': {
+                    FILE *wfp = fopen("worst.bin", "wb");
+                    for (int i = 1 << 14; i >= 0; --i) {
+                        putc(i % 256, wfp);
+                    }
+                    fclose(wfp);
+                    break;
+                }
                 default:
                     break;
             }
@@ -96,4 +124,3 @@ char_count *analysis(std::string filename, bool show = false) {
     fclose(outFile);
     return counts;
 }
-

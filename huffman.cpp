@@ -385,7 +385,7 @@ SFComp(const void *p1, const void *p2)
 static void
 print_freqs(SymbolFrequencies * pSF)
 {
-	FILE *fp = fopen("freqstat.csv", "wb");
+	FILE *fp = fopen("freqstat.csv", "w");
 	size_t i;
 	for(i = 0; i < MAX_SYMBOLS; ++i)
 	{
@@ -921,7 +921,8 @@ huffman_encode_file(FILE *in, FILE *out)
 #if 1
     FILE *fp = fopen("codelen.csv", "w");
     for (int i = 0; i < MAX_SYMBOLS; ++i) {
-		fprintf(fp, "%d,%ld\n", i, (*se)[i]->numbits);
+		if ((*se)[i])
+			fprintf(fp, "%d,%ld\n", i, (*se)[i]->numbits);
 	}
 	fclose(fp);
 #endif
